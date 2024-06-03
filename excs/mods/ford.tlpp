@@ -1,0 +1,24 @@
+#include 'tlpp-core.th'
+#Include "Protheus.ch"
+#include "TbiConn.ch"
+#include "TbiCode.ch"
+
+User Function Ford()
+    local aRet as Array
+    local bBoc := {|x| conout(x)} as Codeblock  
+
+    RpcSetType(3)
+	PREPARE ENVIRONMENT EMPRESA "99" FILIAL "01" MODULO "FAT"
+
+    if TCSPExist("VERIFICA_CLIENTE")
+        aRet := TCSPExec("VERIFICA_CLIENTE")
+
+        Aeval(aRet,bBoc)
+
+    else
+        MsgAlert("Houve um erro com  chamada.")
+    ENDIF
+
+    RESET ENVIRONMENT
+
+return

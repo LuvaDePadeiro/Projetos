@@ -1,0 +1,71 @@
+#include 'tlpp-core.th'
+#Include 'Protheus.ch'
+#Include 'FWMVCDef.ch'
+
+#DEFINE ENTER Chr(13)+Chr(10)
+
+//validacao de acesso para as rotinas customizadas, usando o tl++ como base.
+Class ValidACScop
+	public Method New()
+	public Method Acess() as Logical
+EndClass
+
+Method New() class ValidACScop
+Return Self
+
+Method Acess() as Logical class ValidACScop
+	Local aBindParam as Array
+	Local cUserLogado as Character
+	Local cRotAtual as Character
+	Local cQuery:="" as Character
+	Local cAlias as Character
+	Local lAcesso as Logical
+	Local nRec := 0 as Numeric 
+	
+	lAcesso:=.f.
+	cUserLogado := RetCodUsr()
+	cRotAtual := oApp:oMainWnd:cTitle
+
+	//Consulta se usuario tem a acesso a rotina
+	/*
+	cQuery+=" SELECT * FROM " + RetSQLName("ZZB") + ENTER
+	cQuery+=" WHERE D_E_L_E_T_ <> '*' AND " + ENTER
+	cQuery+=" ZB_CODUSU = '"+ Alltrim(cUserLogado) + "' AND " + ENTER
+	cQuery+=" ZB_FUNCAO = '"+ AllTRim(cRotAtual)+ "' " + ENTER
+
+	MemoWrite("AcessosXRots.sql",cQuery)
+	dbUseArea( .T.,"TOPCONN", TCGENQRY(,,cQuery),"TRBZB", .F., .T.)
+	*/
+
+	cQuery+=" SELECT * FROM " + RetSQLName("ZZB") + ENTER
+	cQuery+=" WHERE D_E_L_E_T_ <> '*' AND " + ENTER
+	cQuery+=" ZB_CODUSU = ? AND " + ENTER
+	cQuery+=" ZB_FUNCAO = ? " + ENTER
+
+	aBindParam:={Alltrim(cUserLogado),AllTRim(cRotAtual)}
+
+	cAlias := MPSysOpenQuery( cQuery,"TRBZB",,,aBindParam)
+
+	//Verifica se a consulta retornou dados
+	Count To nRec
+
+	If nRec == 0
+		Alert("NAO FORAM ENCONTRADOS DADOS, REFAÇA OS PARAMETROS","ATENCAO")
+		DbSelectArea(cAlias)
+		dbCloseArea()
+		Return
+	EndIf
+
+	dbSelectArea(cAlias)
+	dbGoTop()
+
+	//Olhando dentro da consulta e conferindo qual dos acessos do usuario bate com a rotina atual
+	while !Eof()
+		if AllTRim(ZB_FUNCAO) == cRotAtual
+			lAcesso := .t.
+		endif
+		dbSkip()
+	end
+	dbCloseArea()
+
+Return lAcesso

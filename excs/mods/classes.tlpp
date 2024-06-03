@@ -1,0 +1,21 @@
+#include 'tlpp-core.th'
+#Include "Protheus.ch"
+
+Class Resseba
+    Public Method New()
+    Public Method Luva(cPam as Character)
+
+
+EndClass
+
+Method New() Class Resseba
+return self
+
+Method Luva(cPam) Class Resseba
+        MsgAlert(cPam)
+Return
+
+User Function TesteClass()
+    oResseba := Resseba():New()
+    oResseba:Luva("Eis que ro")
+return
