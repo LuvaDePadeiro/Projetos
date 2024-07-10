@@ -1,0 +1,117 @@
+#include 'tlpp-core.th'
+#include 'protheus.ch'
+#include "TbiConn.ch"
+#include "TbiCode.ch"
+
+/*/{Protheus.doc} nomeFunction
+(Bloqueador e desbloqueador de clientes)
+@type user function
+@author Kevin Rodrigues o quase analista
+@version 2.0
+/*/
+User Function nomeFunction(param_name)
+
+Return return_var
+User Function zTDialog()
+	Local aTFolder := {"Bloquear Clientes","Atualizar Cadastro"}
+	Local oDlg := TDialog():New(0,0,600,800,'Exemplo TDialog',,,,,CLR_BLACK,CLR_WHITE,,,.T.)
+	Local oTFolder := TFolder():New( 0,0,aTFolder,,oDlg,,,,.T.,,260,184 )
+	Local cTGet1,cTGet2
+	Local oTGet1,oTGet2
+	Local oTButton1,oTButton2
+
+	Local oCheck1
+	Local oCheck2
+
+	oCheck1 := TCheckBox():New(01,01,'Liberar para o fiscal',{||.T.},oTFolder:aDialogs[2],140,60,,,,,,,,.T.,,,)
+	oCheck2 := TCheckBox():New(11,01,'Liberar para o financeiro',{||.F.},oTFolder:aDialogs[2],140,60,,,,,,,,.T.,,,)
+
+
+	Local nRadio := 1
+	Local aItems := {'Masculino','Feminino'}
+	Local oRadio := TRadMenu():New (30,140,aItems,,oTFolder:aDialogs[1],,,,,,,,100,12,,,,.T.)
+	oRadio:bSetGet := {|u|Iif (PCount()==0,nRadio,nRadio:=u)}
+
+
+	If SELECT("SX6") >0
+		//ALERT("PROTHEUS ABERTO")
+	Else
+		RpcSetType(3)
+		PREPARE ENVIRONMENT EMPRESA "99" FILIAL "01" MODULO "FAT"
+	EndIf
+
+
+	//TButton():New(  nRow ,  nCol ,  cCaption ,  oWnd ,  bAction ,  nWidth ,  nHeight ,  uParam8 ,  oFont ,  uParam10 ,  lPixel ,  uParam12 ,  uParam13 ,  uParam14 ,  bWhen ,  uParam16 ,  uParam17  )
+	//oTButton2 := TButton():New( 022, 002, "Fornecedores",oDlg,{||Mata020()}, 40,10,,,.F.,.T.,.F.,,.F.,,,.F. )
+	//Aba 1
+	cTGet1 := Space(6)
+	cTGet2 := Space(2)
+
+	oTGet1 := TGet():New( 20,30,{|u|if(PCount()==0,cTGet1,cTGet1:=u)},oTFolder:aDialogs[1],096,009,"@!",,0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,,cTGet1,,,, )
+	oTGet1:cF3 := "SA1"
+
+
+	oTGet2 := TGet():New( 50,30,{|u|if(PCount()==0,cTGet2,cTGet2:=u)},oTFolder:aDialogs[1],020,009,"@!",,0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,,cTGet2,,,, )
+
+	oTButton1 := TButton():New( 80, 30, "Bloquear cliente",oTFolder:aDialogs[1],{||BlockClt(cTGet1,cTGet2)}, 70,10,,,.F.,.T.,.F.,,.F.,,,.F. )
+	oTButton2 := TButton():New( 100, 30, "Desbloquear cliente",oTFolder:aDialogs[1],{||UnBlock(cTGet1,cTGet2)}, 70,10,,,.F.,.T.,.F.,,.F.,,,.F. )
+
+	//Aba2
+
+
+
+	// ativa diálogo centralizado
+	oDlg:Activate(/* 1*/,/* 2*/,/* 3*/,.f.,{||msgstop('validou!'),.T.},/*6 */,{||} )
+Return
+/* */
+
+
+Static Function BlockClt(cClt,cLoja)
+
+	dbSelectArea("SA1")
+	SA1->(DBSetOrder(1))
+	SA1->(DBGoTop())
+
+	if SA1->(dbSeek((xFilial("SA1")+cClt+cLoja)))
+		RecLock('SA1',.f.)
+		SA1->(A1_MSBLQL:="1")
+		SA1->(MsUnlock())
+		msginfo("O cliente " + cClt + " foi bloqueado.")
+	else
+		msginfo("Valor não encontrado")
+	endif
+
+	dbCloseArea()
+Return
+
+Static Function UnBlock(cClt,cLoja)
+
+	dbSelectArea("SA1")
+	SA1->(DBSetOrder(1))
+	SA1->(DBGoTop())
+
+	if SA1->(dbSeek((xFilial("SA1")+cClt+cLoja)))
+		RecLock('SA1',.f.)
+		SA1->(A1_MSBLQL:="2")
+		SA1->(MsUnlock())
+		msginfo("O cliente " + cClt + " foi desbloqueado.")
+	else
+		msginfo("Valor não encontrado")
+	endif
+
+	dbCloseArea()
+Return
+
+Static function TstBOX(oCheck)
+
+if valType(oCheck) <> "U"
+  if oCheck:lModified
+    msgInfo("Desmarcado" + oCheck:cTitle)
+  else
+  msgInfo("Marcado" + oCheck:cTitle)
+
+endIf
+
+endIf
+
+return .t.
